@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import random
+import re
 import sqlite3
 
 from aiogram import Bot, Dispatcher, executor, types
@@ -127,6 +128,8 @@ async def handle_command(inline_query: InlineQuery):
     user = inline_query.from_user
     bonus_text = ''
     cur_user.execute('''SELECT * FROM users WHERE user_id = (?)''', (user.id,))
+    if re.fullmatch(r'@\w*', text):
+        await gop(user_id)
     if cur_user.fetchone() is None:
         await add_user(user)
     cur_user.execute('''SELECT cucumber FROM users WHERE user_id = (?) AND cucumber IS NOT NULL''', (user.id,))
@@ -166,6 +169,17 @@ async def handle_command(inline_query: InlineQuery):
                 message_text=top,
                 parse_mode='html'
             )
+        ),
+        InlineQueryResultArticle(
+            id='366',
+            title='Отжать огурчки у ' + text,
+            descrition='Гоп-стоп ха-ха',
+            thumb_height=200,
+            thumb_width=200,
+            input_message_content=InputTextMessageContent(
+                message_text=bonus_text,
+                parse_mode='html'
+            )
         )
     ]
 
@@ -173,8 +187,10 @@ async def handle_command(inline_query: InlineQuery):
         await inline_query.answer(results=[results[0]], cache_time=1, is_personal=True)
     elif text == 'топ':
         await inline_query.answer(results=[results[1]], cache_time=1, is_personal=True)
+    elif re.fullmatch(r'@\w*', text):
+        await inline_query.answer(results=[results[2]], cache_time=1, is_personal=True)
     else:
-        await inline_query.answer(results=results, cache_time=1, is_personal=True)
+        await inline_query.answer(results=results[0:2], cache_time=1, is_personal=True)
 
 
 async def wipe_cucumbers():
